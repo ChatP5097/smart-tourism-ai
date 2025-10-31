@@ -12,9 +12,9 @@
     <!-- Visualization & Content Choices: 
     1. (Page 7) 패러다임 변화 -> Goal: 도입부 핵심 메시지 전달 -> Viz: 3-column HTML/CSS 다이어그램 (기록->검색->질문) -> Interaction: 없음 (정적 정보) -> Justification: 시각적으로 시대의 변화를 즉각 인지시킴.
     2. (Page 6) 한국 AI 앱 사용 데이터 -> Goal: AI의 빠른 성장성 증명 -> Viz: Chart.js 막대 차트 (월간 사용자 추이) 및 가로 막대 차트 (앱 순위) -> Interaction: 차트 호버 시 툴팁 표시 -> Justification: 특강의 당위성을 객관적인 데이터로 뒷받침함. (NO SVG)
-    3. (Pages 36-40) 프롬프트 5단계 -> Goal: 핵심 스킬(AI 통제법) 교육 -> Viz: HTML/CSS 탭(Tab) UI -> Interaction: 탭 클릭 시 해당 설명 동적 표시, LLM을 활용한 프롬프트 생성기 추가 -> Justification: 복잡한 정보를 능동적으로 탐색하게 하며, 이론을 실습으로 연결.
+    3. (Pages 36-40) 프롬프트 5단계 -> Goal: 핵심 스킬(AI 통제법) 교육 -> Viz: HTML/CSS 탭(Tab) UI -> Interaction: 탭 클릭 시 해당 설명 동적 표시 -> Justification: 복잡한 정보를 능동적으로 탐색하게 하며, 이론을 실습으로 연결.
     4. (Pages 52-57) 관광 산업 사례 -> Goal: 실무 연관성 제시 -> Viz: HTML/CSS 카드(Card) 레이아웃 -> Interaction: LLM을 활용한 사례 기반 '아이디어 확장' 기능 추가 -> Justification: 이론적 사례를 넘어 즉각적인 기획 아이디어 도출을 지원.
-    5. (Pages 58-59) 미래 직무 -> Goal: 커리어 비전 제시 -> Viz: 2-column HTML 비교표 (과거 vs 미래) -> Interaction: LLM을 활용한 '커리어 조언' 기능 추가 -> Justification: 학생 개인의 관심사에 맞는 맞춤형 직무 정보를 제공하여 동기 부여.
+    5. (Pages 58-59) 미래 직무 -> Goal: 커리어 비전 제시 -> Viz: 2-column HTML 비교표 (과거 vs 미래) -> Interaction: 없음 -> Justification: 학생 개인의 관심사에 맞는 맞춤형 직무 정보를 제공하여 동기 부여.
     6. (Pages 50, 60-63) AI 도구 리스트 -> Goal: 추가 정보 제공 -> Viz: HTML 리스트 -> Interaction: 없음 -> Justification: ChatGPT 외 다양한 AI 툴을 간략히 소개. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
@@ -169,15 +169,7 @@
                     <p class="mt-2 text-sm text-slate-600">예: "친근하고 따뜻한 말투로 써줘.", "격식있고 전문적인 보고서 스타일로 작성해줘."</p>
                 </div>
 
-                <div class="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h3 class="text-xl font-bold text-blue-700 mb-3">✨ 프롬프트 생성기 (Gemini API 활용)</h3>
-                    <p class="text-slate-600 mb-4">배운 5단계를 조합하여 나만의 프롬프트를 만들고 최적의 질문을 생성하세요.</p>
-                    <textarea id="promptInput" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 mb-3" rows="3" placeholder="예: 역할: 제주 관광 전문가, 목적: 3일 여행 일정 만들기, 배경: 가족 단위, 형식: 표, 스타일: 설득적"></textarea>
-                    <button id="generatePromptBtn" class="sparkle-btn w-full">
-                        ✨ 최적의 프롬프트 생성 요청
-                    </button>
-                    <div id="promptOutput" class="llm-output hidden"></div>
-                </div>
+                <!-- LLM 기능 삭제됨: 프롬프트 생성기 블록 -->
                 
                 <div class="mt-8 p-6 bg-red-50 border border-red-200 rounded-lg">
                     <h3 class="text-xl font-bold text-red-700 mb-3">주의: 환각 현상 (Hallucination)</h3>
@@ -298,15 +290,7 @@
                             <span class="text-slate-700"><strong>AI 오퍼레이션 매니저:</strong> AI 챗봇, 로봇 등의 기술 품질을 관리하고 피드백을 조정합니다.</span>
                         </li>
                     </ul>
-                    <div class="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <h3 class="text-lg font-bold text-yellow-800 mb-3">✨ 커리어 조언 (Gemini API 활용)</h3>
-                        <p class="text-slate-700 mb-3">관심 직무(예: 챗봇 UX 기획자)를 입력하고, 이 직무를 위해 대학 생활 동안 준비해야 할 구체적인 스펙과 활동을 요청하세요.</p>
-                        <input id="careerInput" type="text" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 mb-3" placeholder="예: AI 서비스 디자이너">
-                        <button id="getCareerAdviceBtn" class="sparkle-btn w-full bg-yellow-500 hover:bg-yellow-600">
-                            ✨ 맞춤형 커리어 로드맵 요청
-                        </button>
-                        <div id="careerOutput" class="llm-output hidden"></div>
-                    </div>
+                    <!-- LLM 기능 삭제됨: 커리어 조언 블록 -->
                 </div>
                 
                 <div class="bg-white p-6 rounded-lg shadow-md">
@@ -478,26 +462,12 @@
             }
 
 
-            // --- 1. 프롬프트 생성기 로직 (섹션 2) ---
-            const promptInput = document.getElementById('promptInput');
-            const generatePromptBtn = document.getElementById('generatePromptBtn');
-            const promptOutputDiv = document.getElementById('promptOutput');
+            // --- 1. 프롬프트 생성기 로직 (섹션 2) --- (삭제된 LLM 블록)
+            // const promptInput = document.getElementById('promptInput');
+            // const generatePromptBtn = document.getElementById('generatePromptBtn');
+            // const promptOutputDiv = document.getElementById('promptOutput');
 
-            generatePromptBtn.addEventListener('click', async () => {
-                const input = promptInput.value.trim();
-                if (!input) {
-                    promptOutputDiv.innerHTML = "🚫 5단계 요소를 입력해주세요. (예: 역할: 전문가, 목적: 계획, 배경: 20대 커플, 형식: 표, 스타일: 설득적)";
-                    promptOutputDiv.classList.remove('hidden');
-                    return;
-                }
-                
-                const systemPrompt = "너는 세계 최고의 프롬프트 엔지니어이다. 사용자가 제공한 5가지 프롬프트 요소(역할, 목적, 배경, 형식, 스타일)를 기반으로, 이를 자연스럽고 구체적이며 AI에게 가장 효과적인 단일 질문 문장으로 통합하고 최적화하여 생성해줘. 불필요한 서론/결론 없이 오직 최적화된 프롬프트 문장만 제공해야 해.";
-                
-                const userQuery = `사용자가 제공한 5단계 요소: ${input}. 이 요소를 모두 포함하는 단일 프롬프트 문장을 작성해.`;
-                
-                await callGeminiAPI(systemPrompt, userQuery, 'promptOutput');
-            });
-
+            // generatePromptBtn.addEventListener('click', async () => { ... });
 
             // --- 2. 사례 확장 아이디어 로직 (섹션 3) ---
             const caseButtons = document.querySelectorAll('#practice .sparkle-btn');
@@ -514,24 +484,12 @@
             });
 
 
-            // --- 3. 커리어 조언 로직 (섹션 4) ---
-            const careerInput = document.getElementById('careerInput');
-            const getCareerAdviceBtn = document.getElementById('getCareerAdviceBtn');
-            const careerOutputDiv = document.getElementById('careerOutput');
+            // --- 3. 커리어 조언 로직 (섹션 4) --- (삭제된 LLM 블록)
+            // const careerInput = document.getElementById('careerInput');
+            // const getCareerAdviceBtn = document.getElementById('getCareerAdviceBtn');
+            // const careerOutputDiv = document.getElementById('careerOutput');
 
-            getCareerAdviceBtn.addEventListener('click', async () => {
-                const jobTitle = careerInput.value.trim();
-                if (!jobTitle) {
-                    careerOutputDiv.innerHTML = "🚫 관심 직무를 입력해주세요. (예: 챗봇 UX 기획자)";
-                    careerOutputDiv.classList.remove('hidden');
-                    return;
-                }
-                
-                const systemPrompt = "너는 관광경영학과 학생들을 위한 전문 커리어 코치이다. 사용자가 제시한 AI 관련 직무에 대해, 해당 직무를 위해 대학 생활 중 준비해야 할 핵심 스펙과 활동을 3가지 카테고리(지식, 경험, 기술)로 나누어 구체적인 로드맵을 한국어로 제시해줘. 답변은 목록 형태로 명확하게 제시해야 해.";
-                const userQuery = `나는 관광경영학과 학생이며, 관심 직무는 '${jobTitle}'입니다. 이 직무를 위한 구체적인 대학 생활 로드맵을 알려주세요.`;
-                
-                await callGeminiAPI(systemPrompt, userQuery, 'careerOutput');
-            });
+            // getCareerAdviceBtn.addEventListener('click', async () => { ... });
 
             // --- 내비게이션 스크롤링 및 활성화 ---
             const navLinks = document.querySelectorAll('.nav-link');
