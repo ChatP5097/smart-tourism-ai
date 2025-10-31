@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI로 여는 스마트관광 | 대화형 요약</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutrals with Blue Accent -->
+    <!-- Application Structure Plan: 이 SPA는 특강 자료의 1부/2부 구조 대신, 사용자의 학습 흐름에 최적화된 6개의 thematic section(도입, 핵심 역량, 실무 적용, 미래 비전, 데이터, 도구 상자)으로 재설계되었습니다. 사용자는 상단 고정 내비게이션을 통해 원하는 섹션으로 즉시 이동할 수 있습니다. '핵심 역량'에서는 프롬프트 5단계를 대화형 탭으로, '실무 적용'에서는 관광 사례를 클릭 가능한 카드로 제공하여 상호작용을 유도했습니다. 이는 청중(학생)이 '왜(도입) -> 무엇을(핵심 역량) -> 어떻게(실무 적용) -> 그래서 나는(미래 비전)' 순서로 정보를 논리적으로 탐색하고 합성할 수 있도록 설계된 구조입니다. -->
+    <!-- Visualization & Content Choices: 
+    1. (Page 7) 패러다임 변화 -> Goal: 도입부 핵심 메시지 전달 -> Viz: 3-column HTML/CSS 다이어그램 (기록->검색->질문) -> Interaction: 없음 (정적 정보) -> Justification: 시각적으로 시대의 변화를 즉각 인지시킴.
+    2. (Page 6) 한국 AI 앱 사용 데이터 -> Goal: AI의 빠른 성장성 증명 -> Viz: Chart.js 막대 차트 (월간 사용자 추이) 및 가로 막대 차트 (앱 순위) -> Interaction: 차트 호버 시 툴팁 표시 -> Justification: 특강의 당위성을 객관적인 데이터로 뒷받침함. (NO SVG)
+    3. (Pages 36-40) 프롬프트 5단계 -> Goal: 핵심 스킬(AI 통제법) 교육 -> Viz: HTML/CSS 탭(Tab) UI -> Interaction: 탭 클릭 시 해당 설명 동적 표시, LLM을 활용한 프롬프트 생성기 추가 -> Justification: 복잡한 정보를 능동적으로 탐색하게 하며, 이론을 실습으로 연결.
+    4. (Pages 52-57) 관광 산업 사례 -> Goal: 실무 연관성 제시 -> Viz: HTML/CSS 카드(Card) 레이아웃 -> Interaction: LLM을 활용한 사례 기반 '아이디어 확장' 기능 추가 -> Justification: 이론적 사례를 넘어 즉각적인 기획 아이디어 도출을 지원.
+    5. (Pages 58-59) 미래 직무 -> Goal: 커리어 비전 제시 -> Viz: 2-column HTML 비교표 (과거 vs 미래) -> Interaction: LLM을 활용한 '커리어 조언' 기능 추가 -> Justification: 학생 개인의 관심사에 맞는 맞춤형 직무 정보를 제공하여 동기 부여.
+    6. (Pages 50, 60-63) AI 도구 리스트 -> Goal: 추가 정보 제공 -> Viz: HTML 리스트 -> Interaction: 없음 -> Justification: ChatGPT 외 다양한 AI 툴을 간략히 소개. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc; /* bg-slate-50 */
+            color: #1e293b; /* bg-slate-800 */
+        }
+        .nav-link {
+            @apply px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-blue-100 hover:text-blue-700 transition-colors cursor-pointer;
+        }
+        .nav-link.active {
+            @apply bg-blue-600 text-white hover:bg-blue-700 hover:text-white;
+        }
+        .section-title {
+            @apply text-3xl font-bold text-blue-700 mb-4;
+        }
+        .section-subtitle {
+            @apply text-lg text-slate-600 mb-8;
+        }
+        .tab-btn {
+            @apply px-4 py-2 font-semibold rounded-t-lg transition-colors;
+        }
+        .tab-btn.active {
+            @apply bg-white text-blue-600 border-b-2 border-blue-600;
+        }
+        .tab-btn:not(.active) {
+            @apply bg-slate-100 text-slate-500 hover:bg-slate-200;
+        }
+        .tab-content {
+            @apply hidden p-6 bg-white rounded-b-lg shadow-md;
+        }
+        .tab-content.active {
+            @apply block;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* max-w-2xl */
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px; /* h-80 */
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px; /* md:h-96 */
+            }
+        }
+        .sparkle-btn {
+            @apply bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md flex items-center justify-center space-x-2;
+        }
+        .llm-output {
+            @apply mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm whitespace-pre-wrap;
+        }
+        .llm-loading {
+            @apply bg-yellow-100 text-yellow-800 py-2 px-4 rounded-lg flex items-center justify-center space-x-2;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- 상단 고정 내비게이션 -->
+    <nav id="navbar" class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <span class="text-xl font-bold text-blue-700">AI로 여는 스마트관광</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a class="nav-link" data-target="home">도입</a>
+                        <a class="nav-link" data-target="skill">핵심 역량</a>
+                        <a class="nav-link" data-target="practice">실무 적용</a>
+                        <a class="nav-link" data-target="future">미래 비전</a>
+                        <a class="nav-link" data-target="data">데이터</a>
+                        <a class="nav-link" data-target="tools">도구 상자</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- 섹션 1: 도입 (Home) -->
+        <section id="home" class="pt-16 -mt-16 text-center">
+            <h1 class="text-4xl font-bold text-slate-900 mb-4">AI로 여는 스마트관광</h1>
+            <p class="text-xl text-slate-600 mb-12">이해 → 활용사례 → 커리어 확장, 한 번에 끝내는 로드맵</p>
+            
+            <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold text-blue-700 mb-6">패러다임의 전환: "질문하는 시대"</h2>
+                <p class="text-slate-600 mb-8">우리는 정보를 다루는 방식이 근본적으로 변하는 시대에 살고 있습니다. AI의 등장은 단순한 기술 발전을 넘어, 우리가 일하고 배우는 방식 자체를 바꾸고 있습니다.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="border border-slate-200 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-3">1. 기록하는 시대</h3>
+                        <p class="text-slate-500">지식은 소수가 독점하고 수작업으로 기록되었습니다. (아날로그 시대)</p>
+                    </div>
+                    <div class="border border-slate-200 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-3">2. 찾는 시대</h3>
+                        <p class="text-slate-500">인터넷과 검색 엔진의 등장으로 누구나 정보를 '검색'할 수 있게 되었습니다. (디지털 시대)</p>
+                    </div>
+                    <div class="border border-blue-500 border-2 p-6 rounded-lg bg-blue-50 shadow-md">
+                        <h3 class="text-xl font-semibold text-blue-800 mb-3">3. 질문하는 시대</h3>
+                        <p class="text-blue-700">AI가 정보를 요약하고 재구성합니다. '무엇을, 어떻게 묻고 지시할지'가 핵심 역량이 되었습니다. (생성형 AI 시대)</p>
+                    </div>
+                </div>
+                <p class="mt-8 text-lg font-medium text-slate-700">"기술보다 중요한 것은, 그것을 제대로 활용하는 사람입니다."<br>- 신정현 대표 (ChatP)</p>
+            </div>
+        </section>
+
+        <!-- 섹션 2: 핵심 역량 (Skill) -->
+        <section id="skill" class="pt-24 -mt-16">
+            <h2 class="section-title text-center">핵심 역량: AI 통제와 프롬프트 설계</h2>
+            <p class="section-subtitle text-center">AI 시대의 핵심은 '질문' 즉, 프롬프트를 설계하는 능력입니다. AI가 내 의도대로 움직이게 하는 5단계 방법론입니다.</p>
+
+            <div class="max-w-3xl mx-auto">
+                <!-- 탭 버튼 -->
+                <div class="flex border-b border-slate-200">
+                    <button class="tab-btn active" data-tab="tab1">1. 역할 (Role)</button>
+                    <button class="tab-btn" data-tab="tab2">2. 목적 (Goal)</button>
+                    <button class="tab-btn" data-tab="tab3">3. 배경 (Context)</button>
+                    <button class="tab-btn" data-tab="tab4">4. 형식 (Format)</button>
+                    <button class="tab-btn" data-tab="tab5">5. 스타일 (Style)</button>
+                </div>
+                
+                <!-- 탭 콘텐츠 -->
+                <div id="tab1" class="tab-content active">
+                    <h3 class="text-xl font-bold mb-3">1단계: 역할 (Role)</h3>
+                    <p>AI에게 특정 전문가의 역할을 부여하여 답변의 관점을 고정시킵니다.</p>
+                    <p class="mt-2 text-sm text-slate-600">예: "너는 20년 경력의 베테랑 호텔 컨시어지야."</p>
+                </div>
+                <div id="tab2" class="tab-content">
+                    <h3 class="text-xl font-bold mb-3">2단계: 목적 (Goal)</h3>
+                    <p>원하는 결과물의 목적을 한 단어로 명확히 제시합니다.</p>
+                    <p class="mt-2 text-sm text-slate-600">예: "(손님을) '설득'하기 위한 이메일을 작성해줘." (정보전달, 설득, 경고, 공감 등)</p>
+                </div>
+                <div id="tab3" class="tab-content">
+                    <h3 class="text-xl font-bold mb-3">3단계: 배경 (Context)</h3>
+                    <p>AI가 고려해야 할 구체적인 상황, 대상, 조건, 제한 사항을 제공합니다.</p>
+                    <p class="mt-2 text-sm text-slate-600">예: "대상은 20대 커플이고, 예산은 30만원 이내, 날짜는 다음 주 주말이야."</p>
+                </div>
+                <div id="tab4" class="tab-content">
+                    <h3 class="text-xl font-bold mb-3">4단계: 형식 (Format)</h3>
+                    <p>결과물을 어떤 형태로 받을지 구체적으로 지정합니다.</p>
+                    <p class="mt-2 text-sm text-slate-600">예: "결과를 '표'로 만들어줘.", "Q&A 형식으로 작성해줘." (목차, 표, 스크립트 등)</p>
+                </div>
+                <div id="tab5" class="tab-content">
+                    <h3 class="text-xl font-bold mb-3">5단계: 스타일 (Style)</h3>
+                    <p>글의 톤앤매너(Tone & Manner)를 독자와 브랜드에 맞게 지정합니다.</p>
+                    <p class="mt-2 text-sm text-slate-600">예: "친근하고 따뜻한 말투로 써줘.", "격식있고 전문적인 보고서 스타일로 작성해줘."</p>
+                </div>
+
+                <div class="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h3 class="text-xl font-bold text-blue-700 mb-3">✨ 프롬프트 생성기 (Gemini API 활용)</h3>
+                    <p class="text-slate-600 mb-4">배운 5단계를 조합하여 나만의 프롬프트를 만들고 최적의 질문을 생성하세요.</p>
+                    <textarea id="promptInput" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 mb-3" rows="3" placeholder="예: 역할: 제주 관광 전문가, 목적: 3일 여행 일정 만들기, 배경: 가족 단위, 형식: 표, 스타일: 설득적"></textarea>
+                    <button id="generatePromptBtn" class="sparkle-btn w-full">
+                        ✨ 최적의 프롬프트 생성 요청
+                    </button>
+                    <div id="promptOutput" class="llm-output hidden"></div>
+                </div>
+                
+                <div class="mt-8 p-6 bg-red-50 border border-red-200 rounded-lg">
+                    <h3 class="text-xl font-bold text-red-700 mb-3">주의: 환각 현상 (Hallucination)</h3>
+                    <p class="text-red-600">AI는 존재하지 않는 정보나 출처를 실제처럼 생성할 수 있습니다(거짓말). AI는 확률적으로 그럴듯한 문장을 생성할 뿐, 진위를 확인하는 기능이 없습니다. 따라서 AI가 제시한 정보, 특히 사실관계(논문, 기사, 통계)는 반드시 사용자가 직접 검증(Fact-Check)해야 합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 섹션 3: 실무 적용 (Practice) -->
+        <section id="practice" class="pt-24 -mt-16">
+            <h2 class="section-title text-center">실무 적용: 관광 산업의 AI</h2>
+            <p class="section-subtitle text-center">AI는 이미 관광 및 환대 산업 현장에서 고객 경험(CX)을 혁신하고 운영을 효율화하고 있습니다.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 사례 1: 휘닉스 호텔 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-transform hover:scale-105">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-700 mb-2">고객 경험 (CX) 자동화</h3>
+                        <p class="text-sm font-semibold text-slate-600 mb-3">ChatP × 휘닉스 호텔&리조트</p>
+                        <p class="text-slate-700">체크인부터 체크아웃까지, 24시간 운영되는 AI 컨시어지 챗봇을 도입했습니다. 단순 반복 문의(조식 시간, 시설 안내)를 자동화하여 직원들이 더 창의적이고 사람 중심적인 서비스에 집중할 수 있게 되었습니다.</p>
+                        <button class="sparkle-btn mt-4 w-full text-sm" data-case="휘닉스 호텔의 챗봇 기반 서비스 확장 아이디어 3가지">
+                            ✨ 아이디어 확장 요청
+                        </button>
+                        <div id="output-휘닉스" class="llm-output hidden"></div>
+                    </div>
+                </div>
+
+                <!-- 사례 2: 제주 신화월드 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-transform hover:scale-105">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-700 mb-2">운영 효율화 (Operations)</h3>
+                        <p class="text-sm font-semibold text-slate-600 mb-3">제주 신화월드 × KT AI 로봇</p>
+                        <p class="text-slate-700">대규모 복합 리조트 단지 내에 AI 배송 로봇을 도입했습니다. 고객이 주문한 물품을 비대면으로 자동 전달하며, AI 센서로 장애물을 회피하고 최적 경로를 탐색하여 운영 효율을 극대화했습니다.</p>
+                        <button class="sparkle-btn mt-4 w-full text-sm" data-case="AI 로봇 운영 데이터를 활용한 리조트 운영 효율화 전략 3가지">
+                            ✨ 아이디어 확장 요청
+                        </button>
+                        <div id="output-신화월드" class="llm-output hidden"></div>
+                    </div>
+                </div>
+                
+                <!-- 사례 3: 워커힐 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-transform hover:scale-105">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-700 mb-2">새로운 공간 경험</h3>
+                        <p class="text-sm font-semibold text-slate-600 mb-3">워커힐 AI 라운지</p>
+                        <p class="text-slate-700">AI와 호텔 공간을 융합한 체험 공간을 운영합니다. 고객은 AI 매니저와 음성 대화로 호텔 내 전시 미술품 정보를 안내받는 등, 기술을 통해 새로운 방식의 럭셔리 경험을 제공받습니다.</p>
+                        <button class="sparkle-btn mt-4 w-full text-sm" data-case="AI 라운지 체험을 극대화할 수 있는 마케팅 카피 3가지">
+                            ✨ 아이디어 확장 요청
+                        </button>
+                        <div id="output-워커힐" class="llm-output hidden"></div>
+                    </div>
+                </div>
+
+                <!-- 사례 4: OTA -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-transform hover:scale-105">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-700 mb-2">데이터 기반 마케팅</h3>
+                        <p class="text-sm font-semibold text-slate-600 mb-3">야놀자 & 여기어때 (OTA)</p>
+                        <p class="text-slate-700">AI를 활용해 수천 건의 후기를 실시간으로 요약하고 키워드(청결, 위치)를 추출합니다. 또한 AI 가격 예측 시스템으로 수요를 분석하여 합리적인 요금을 제시, 단순 중개를 넘어 '여행 경험 설계자'로 진화하고 있습니다.</p>
+                        <button class="sparkle-btn mt-4 w-full text-sm" data-case="AI 후기 분석을 기반으로 한 숙소 개선 아이디어 3가지">
+                            ✨ 아이디어 확장 요청
+                        </button>
+                        <div id="output-ota" class="llm-output hidden"></div>
+                    </div>
+                </div>
+
+                <!-- 사례 5: 반다비체육센터 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-transform hover:scale-105">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-700 mb-2">공공 행정 효율화</h3>
+                        <p class="text-sm font-semibold text-slate-600 mb-3">ChatP × 반다비체육센터</p>
+                        <p class="text-slate-700">운영시간, 요금 등 반복 문의를 AI가 자동 응대하여 직원 업무를 60% 감소시켰습니다. AI는 직원을 대신하는 것이 아니라, 시민과 행정을 잇는 '스마트 행정 동반자' 역할을 수행합니다.</p>
+                        <button class="sparkle-btn mt-4 w-full text-sm" data-case="공공 체육시설 챗봇을 통한 시민 만족도 향상 방안 3가지">
+                            ✨ 아이디어 확장 요청
+                        </button>
+                        <div id="output-반다비" class="llm-output hidden"></div>
+                    </div>
+                </div>
+
+                <!-- 사례 6: 거제해양관광 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-transform hover:scale-105">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-700 mb-2">지역 관광 활성화</h3>
+                        <p class="text-sm font-semibold text-slate-600 mb-3">ChatP × 거제해양관광공사</p>
+                        <p class="text-slate-700">"AI 여행 플래너"를 통해 다국어(영어, 일본어) 관광 정보를 제공하고 소상공인과 연계합니다. AI는 단순 정보 전달 도구가 아닌, 지역 문화와 경제를 연결하는 '디지털 가이드'가 됩니다.</p>
+                        <button class="sparkle-btn mt-4 w-full text-sm" data-case="AI 여행 플래너의 지역 소상공인 연계 활성화 아이디어 3가지">
+                            ✨ 아이디어 확장 요청
+                        </button>
+                        <div id="output-거제" class="llm-output hidden"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 섹션 4: 미래 비전 (Future) -->
+        <section id="future" class="pt-24 -mt-16">
+            <h2 class="section-title text-center">미래 비전: AI 시대 관광 전공자의 기회</h2>
+            <p class="section-subtitle text-center">AI 기술은 관광 산업에서 '사람 중심 서비스'를 설계할 인재에게 더 많은 기회를 제공합니다.</p>
+
+            <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-blue-700 mb-4">새롭게 부상하는 직무</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold mr-3">1</span>
+                            <span class="text-slate-700"><strong>AI 서비스 디자이너:</strong> 고객 여정을 분석하고 AI가 개입할 서비스 흐름을 설계합니다.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold mr-3">2</span>
+                            <span class="text-slate-700"><strong>챗봇 UX 기획자:</strong> 브랜드 어조를 반영한 대화 시나리오와 응답을 설계합니다. (기술 + 인문학)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold mr-3">3</span>
+                            <span class="text-slate-700"><strong>AI 데이터 마케터:</strong> 고객 데이터를 활용해 맞춤형 프로모션과 수요 예측을 수행합니다.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold mr-3">4</span>
+                            <span class="text-slate-700"><strong>AI 오퍼레이션 매니저:</strong> AI 챗봇, 로봇 등의 기술 품질을 관리하고 피드백을 조정합니다.</span>
+                        </li>
+                    </ul>
+                    <div class="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <h3 class="text-lg font-bold text-yellow-800 mb-3">✨ 커리어 조언 (Gemini API 활용)</h3>
+                        <p class="text-slate-700 mb-3">관심 직무(예: 챗봇 UX 기획자)를 입력하고, 이 직무를 위해 대학 생활 동안 준비해야 할 구체적인 스펙과 활동을 요청하세요.</p>
+                        <input id="careerInput" type="text" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 mb-3" placeholder="예: AI 서비스 디자이너">
+                        <button id="getCareerAdviceBtn" class="sparkle-btn w-full bg-yellow-500 hover:bg-yellow-600">
+                            ✨ 맞춤형 커리어 로드맵 요청
+                        </button>
+                        <div id="careerOutput" class="llm-output hidden"></div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-blue-700 mb-4">직무 구조의 재편: AI 오케스트레이터</h3>
+                    <p class="text-slate-600 mb-4">AI는 단순 반복 업무(Blue Level)를 자동화하고, 인간은 더 창의적이고 감성적인 역할(White Level)로 이동합니다.</p>
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100">
+                                <th class="border p-3 text-left font-semibold">구분</th>
+                                <th class="border p-3 text-left font-semibold">과거 역할</th>
+                                <th class="border p-3 text-left font-semibold">미래 전망 (AI 협업)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border p-3"><strong>블루레벨 (운영)</strong></td>
+                                <td class="border p-3">단순 응대·운영</td>
+                                <td class="border p-3 text-blue-600">AI 관리·감독 (Human-in-the-loop)</td>
+                            </tr>
+                            <tr>
+                                <td class="border p-3"><strong>화이트레벨 (기획)</strong></td>
+                                <td class="border p-3">마케팅·기획</td>
+                                <td class="border p-3 text-blue-600"><strong>AI 오케스트레이터</strong> (AI 협업 설계자)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="mt-4 text-slate-700"><strong>AI 오케스트레이터</strong>란, AI가 만든 데이터를 해석하고 인간의 감성과 판단으로 서비스 방향을 설계하는 '하이브리드 직무'입니다. AI를 잘 다루는 기술자가 아닌, AI를 서비스 전략과 연결하는 기획자가 중요합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 섹션 5: 데이터 (Data) -->
+        <section id="data" class="pt-24 -mt-16">
+            <h2 class="section-title text-center">데이터: AI는 얼마나 빠르게 성장하는가?</h2>
+            <p class="section-subtitle text-center">AI는 선택이 아닌 필수입니다. 한국 시장의 AI 챗봇 사용 현황 데이터입니다.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 text-center">ChatGPT 앱 월간 사용자 추이 (한국)</h3>
+                    <div class="chart-container">
+                        <canvas id="userTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 text-center">한국인이 많이 사용한 AI 챗봇 앱 (2025. 6월)</h3>
+                    <div class="chart-container">
+                        <canvas id="appRankChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 섹션 6: 도구 상자 (Tools) -->
+        <section id="tools" class="pt-24 -mt-16 pb-16">
+            <h2 class="section-title text-center">AI 도구 상자 (Toolkit)</h2>
+            <p class="section-subtitle text-center">ChatGPT 외에도 다양한 생성형 AI 도구들이 콘텐츠 제작에 활용되고 있습니다.</p>
+            
+            <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+                <ul class="divide-y divide-slate-200">
+                    <li class="py-4">
+                        <h3 class="text-lg font-semibold text-blue-700">ChatGPT (OpenAI) / Gemini (Google) / Claude (Anthropic)</h3>
+                        <p class="text-slate-600">텍스트 생성, 요약, 번역, 코드 작성, 프롬프트 기반의 대화형 AI (특강 핵심)</p>
+                    </li>
+                    <li class="py-4">
+                        <h3 class="text-lg font-semibold text-blue-700">Midjourney / DALL-E 3 / Leonardo.AI</h3>
+                        <p class="text-slate-600">이미지 생성 AI. 텍스트 프롬프트를 기반으로 고품질의 이미지를 생성합니다.</p>
+                    </li>
+                    <li class="py-4">
+                        <h3 class="text-lg font-semibold text-blue-700">Suno AI</h3>
+                        <p class="text-slate-600">음악 생성 AI. 원하는 장르, 분위기, 가사를 입력하면 나만의 플레이리스트(노래)를 작곡하고 생성합니다.</p>
+                    </li>
+                    <li class="py-4">
+                        <h3 class="text-lg font-semibold text-blue-700">Gemini VEO3 / Sora (OpenAI) / KlingAI</h3>
+                        <p class="text-slate-600">동영상 생성 AI. 텍스트나 이미지를 기반으로 고품질의 숏폼 또는 동영상 클립을 생성합니다.</p>
+                    </li>
+                    <li class="py-4">
+                        <h3 class="text-lg font-semibold text-blue-700">Invideo AI / Capcut</h3>
+                        <p class="text-slate-600">AI 기반 동영상 편집 도구. 생성된 이미지와 음악을 조합하여 숏츠나 유튜브 영상을 쉽게 제작할 수 있도록 돕습니다.</p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300 py-8">
+        <div class="container mx-auto px-8 text-center">
+            <p>본 페이지는 '제주대학교 관광경영학과' 특강 자료를 기반으로 생성된 대화형 웹 애플리케이션입니다.</p>
+            <p class="mt-2">강사: 신정현 (ChatP 대표)</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const API_KEY = "";
+            const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=" + API_KEY;
+
+            // --- LLM API Call Function (with exponential backoff) ---
+            async function callGeminiAPI(systemInstruction, userQuery, outputElementId) {
+                const outputDiv = document.getElementById(outputElementId);
+                
+                // 로딩 메시지 설정
+                outputDiv.innerHTML = '<div class="llm-loading">✨ AI가 생각 중입니다...</div>';
+                outputDiv.classList.remove('hidden');
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: { parts: [{ text: systemInstruction }] },
+                };
+
+                let response;
+                let data;
+                let retries = 0;
+                const maxRetries = 3;
+                
+                while (retries < maxRetries) {
+                    try {
+                        response = await fetch(API_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (response.ok) {
+                            data = await response.json();
+                            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "죄송합니다. AI 응답을 생성할 수 없습니다.";
+                            outputDiv.innerHTML = text;
+                            return;
+                        } else if (response.status === 429) {
+                            retries++;
+                            const delay = Math.pow(2, retries) * 1000;
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        } else {
+                            throw new Error(`API error: ${response.status}`);
+                        }
+                    } catch (error) {
+                        console.error("Gemini API call failed:", error);
+                        retries++;
+                        if (retries >= maxRetries) {
+                            outputDiv.innerHTML = '🚫 API 호출에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+                            return;
+                        }
+                        const delay = Math.pow(2, retries) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+                outputDiv.innerHTML = '🚫 API 호출에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+            }
+
+
+            // --- 1. 프롬프트 생성기 로직 (섹션 2) ---
+            const promptInput = document.getElementById('promptInput');
+            const generatePromptBtn = document.getElementById('generatePromptBtn');
+            const promptOutputDiv = document.getElementById('promptOutput');
+
+            generatePromptBtn.addEventListener('click', async () => {
+                const input = promptInput.value.trim();
+                if (!input) {
+                    promptOutputDiv.innerHTML = "🚫 5단계 요소를 입력해주세요. (예: 역할: 전문가, 목적: 계획, 배경: 20대 커플, 형식: 표, 스타일: 설득적)";
+                    promptOutputDiv.classList.remove('hidden');
+                    return;
+                }
+                
+                const systemPrompt = "너는 세계 최고의 프롬프트 엔지니어이다. 사용자가 제공한 5가지 프롬프트 요소(역할, 목적, 배경, 형식, 스타일)를 기반으로, 이를 자연스럽고 구체적이며 AI에게 가장 효과적인 단일 질문 문장으로 통합하고 최적화하여 생성해줘. 불필요한 서론/결론 없이 오직 최적화된 프롬프트 문장만 제공해야 해.";
+                
+                const userQuery = `사용자가 제공한 5단계 요소: ${input}. 이 요소를 모두 포함하는 단일 프롬프트 문장을 작성해.`;
+                
+                await callGeminiAPI(systemPrompt, userQuery, 'promptOutput');
+            });
+
+
+            // --- 2. 사례 확장 아이디어 로직 (섹션 3) ---
+            const caseButtons = document.querySelectorAll('#practice .sparkle-btn');
+            caseButtons.forEach(button => {
+                const outputId = 'output-' + button.parentElement.querySelector('p:nth-child(2)').textContent.split('×')[0].trim().replace(/\s/g, '');
+                button.addEventListener('click', async () => {
+                    const caseQuery = button.getAttribute('data-case');
+                    
+                    const systemPrompt = "너는 혁신적인 관광 경영 컨설턴트이다. 사용자가 요청한 관광/호텔 사례를 분석하고, 해당 기술이나 전략을 기반으로 즉시 실행 가능하고 창의적인 신규 비즈니스 아이디어 3가지를 도출하여 한국어로 간결하게 목록(번호 필수)으로 제시해줘. 각 아이디어는 2줄을 넘지 않도록 해.";
+                    const userQuery = `다음 사례에 대한 아이디어를 도출해줘: ${caseQuery}`;
+
+                    await callGeminiAPI(systemPrompt, userQuery, outputId);
+                });
+            });
+
+
+            // --- 3. 커리어 조언 로직 (섹션 4) ---
+            const careerInput = document.getElementById('careerInput');
+            const getCareerAdviceBtn = document.getElementById('getCareerAdviceBtn');
+            const careerOutputDiv = document.getElementById('careerOutput');
+
+            getCareerAdviceBtn.addEventListener('click', async () => {
+                const jobTitle = careerInput.value.trim();
+                if (!jobTitle) {
+                    careerOutputDiv.innerHTML = "🚫 관심 직무를 입력해주세요. (예: 챗봇 UX 기획자)";
+                    careerOutputDiv.classList.remove('hidden');
+                    return;
+                }
+                
+                const systemPrompt = "너는 관광경영학과 학생들을 위한 전문 커리어 코치이다. 사용자가 제시한 AI 관련 직무에 대해, 해당 직무를 위해 대학 생활 중 준비해야 할 핵심 스펙과 활동을 3가지 카테고리(지식, 경험, 기술)로 나누어 구체적인 로드맵을 한국어로 제시해줘. 답변은 목록 형태로 명확하게 제시해야 해.";
+                const userQuery = `나는 관광경영학과 학생이며, 관심 직무는 '${jobTitle}'입니다. 이 직무를 위한 구체적인 대학 생활 로드맵을 알려주세요.`;
+                
+                await callGeminiAPI(systemPrompt, userQuery, 'careerOutput');
+            });
+
+            // --- 내비게이션 스크롤링 및 활성화 ---
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+            const navbar = document.getElementById('navbar');
+            const navbarHeight = navbar.offsetHeight;
+
+            function changeActiveLink() {
+                let index = sections.length;
+
+                while(--index && window.scrollY + navbarHeight + 50 < sections[index].offsetTop) {}
+                
+                navLinks.forEach((link) => link.classList.remove('active'));
+                
+                const activeLink = document.querySelector(`.nav-link[data-target="${sections[index].id}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                }
+            }
+
+            changeActiveLink();
+            window.addEventListener('scroll', changeActiveLink);
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('data-target');
+                    const targetSection = document.getElementById(targetId);
+                    
+                    window.scrollTo({
+                        top: targetSection.offsetTop - navbarHeight,
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            // --- 탭(Tab) UI 로직 (핵심 역량 섹션) ---
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.getAttribute('data-tab');
+
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    tabContents.forEach(content => {
+                        if (content.id === targetTab) {
+                            content.classList.add('active');
+                        } else {
+                            content.classList.remove('active');
+                        }
+                    });
+                });
+            });
+
+            // --- Chart.js 데이터 및 초기화 (데이터 섹션) ---
+            
+            // 특강 자료 Page 6에서 데이터 추출 (만 단위)
+            const userTrendData = {
+                labels: ['23년 8월', '23년 12월', '24년 4월', '24년 8월', '24년 12월', '25년 4월', '25년 8월'],
+                values: [47, 147, 235, 407, 682, 1748, 2031] 
+            };
+            
+            const appRankData = {
+                labels: ['ChatGPT', 'Perplexity', '다글로', 'Claude', 'Grok', 'Al챗', '크랙'],
+                values: [1844, 304, 245, 171, 138, 63, 43] 
+            };
+
+            // 차트 1: 사용자 추이 (막대 그래프)
+            const ctx1 = document.getElementById('userTrendChart').getContext('2d');
+            if (ctx1) {
+                new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: userTrendData.labels,
+                        datasets: [{
+                            label: '월간 사용자 (만 명)',
+                            data: userTrendData.values,
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)', // bg-blue-600
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.parsed.y + '만 명';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '사용자 (만 명)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 차트 2: 앱 순위 (가로 막대 그래프)
+            const ctx2 = document.getElementById('appRankChart').getContext('2d');
+            if (ctx2) {
+                new Chart(ctx2, {
+                    type: 'bar', // 가로 막대를 위해 indexAxis를 'y'로 설정
+                    data: {
+                        labels: appRankData.labels,
+                        datasets: [{
+                            label: '앱 사용자 (만 명)',
+                            data: appRankData.values,
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.7)', // blue-600
+                                'rgba(16, 185, 129, 0.7)', // emerald-500
+                                'rgba(234, 179, 8, 0.7)', // yellow-500
+                                'rgba(249, 115, 22, 0.7)', // orange-500
+                                'rgba(239, 68, 68, 0.7)', // red-500
+                                'rgba(139, 92, 246, 0.7)', // violet-500
+                                'rgba(107, 114, 128, 0.7)' // slate-500
+                            ],
+                            borderColor: [
+                                'rgba(59, 130, 246, 1)',
+                                'rgba(16, 185, 129, 1)',
+                                'rgba(234, 179, 8, 1)',
+                                'rgba(249, 115, 22, 1)',
+                                'rgba(239, 68, 68, 1)',
+                                'rgba(139, 92, 246, 1)',
+                                'rgba(107, 114, 128, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y', // 이 옵션으로 가로 막대 차트 생성
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.parsed.x + '만 명';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '사용자 (만 명)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
